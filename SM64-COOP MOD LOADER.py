@@ -9,6 +9,12 @@ import subprocess
 if __name__ == "__main__":
     ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
+def periodic_update():
+    """Refresh the mods and archive lists every 5 seconds."""
+    update_mods_list()
+    update_mods_archive_list()
+    root.after(5000, periodic_update)  # Schedule this function to be called again in 5 seconds
+
 def open_folder(folder):
     """Open the specified folder using the file explorer."""
     os.startfile(folder)
@@ -322,6 +328,9 @@ play_button.pack(pady=20)
 
 # Setup initial mods
 setup_initial_mods()
+
+# Start the periodic update
+root.after(5000, periodic_update)  # Start periodic updates every 5 seconds
 
 # Start the Tkinter main loop
 root.mainloop()

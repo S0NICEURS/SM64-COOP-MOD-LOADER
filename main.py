@@ -25,7 +25,9 @@ required_modules = [
     'subprocess',
     'ctypes',
     'rarfile',
+    'zipfile',
     'argparse',
+    
 ]
 
 # Vérifier si le fichier JSON existe
