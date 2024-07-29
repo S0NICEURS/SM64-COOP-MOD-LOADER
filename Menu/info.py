@@ -13,7 +13,7 @@ root.geometry("400x200")
 version_label = tk.Label(root, text="Version", font=("Arial", 18))
 version_label.pack(pady=(20, 0))
 
-version_value = tk.Label(root, text="1.6", font=("Arial", 16), fg="red")
+version_value = tk.Label(root, text="1.7", font=("Arial", 16), fg="red")
 version_value.pack()
 
 author_label = tk.Label(root, text="Creator", font=("Arial", 18))
