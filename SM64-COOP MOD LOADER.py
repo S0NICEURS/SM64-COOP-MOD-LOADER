@@ -1,5 +1,5 @@
-import tkinter as tk
 import ctypes
+import tkinter as tk
 from tkinter import ttk, messagebox, Menu, filedialog
 import os
 import shutil
@@ -8,6 +8,48 @@ import subprocess
 
 if __name__ == "__main__":
     ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+
+def open_set_play_interface():
+    """Ouvre une fenêtre pour configurer les exécutables pour les boutons de jeu."""
+    def apply_changes():
+        """Enregistre les chemins des exécutables sélectionnés."""
+        ex_coop_path = ex_coop_entry.get()
+        coop_deluxe_path = coop_deluxe_entry.get()
+
+        if ex_coop_path and coop_deluxe_path:
+            with open('play_executables.json', 'w') as f:
+                json.dump({'EX_COOP': ex_coop_path, 'COOP_DELUXE': coop_deluxe_path}, f)
+            messagebox.showinfo("Configuration", "Les chemins des exécutables ont été mis à jour.")
+            set_play_window.destroy()
+        else:
+            messagebox.showerror("Error", "Please select the executable paths for both options.")
+
+    def browse_file(entry_widget):
+        """Ouvre une boîte de dialogue pour sélectionner un fichier exécutable."""
+        file_path = filedialog.askopenfilename(filetypes=[("Executable files", "*.exe")])
+        if file_path:
+            entry_widget.delete(0, tk.END)
+            entry_widget.insert(0, file_path)
+
+    # Créer la fenêtre de configuration
+    set_play_window = tk.Toplevel(root)
+    set_play_window.title("Set Play")
+    set_play_window.geometry("400x250")
+    set_play_window.configure(bg=background_color)
+
+    # Configuration des chemins d'exécutables
+    tk.Label(set_play_window, text="EX COOP Executable:", bg=background_color, fg='white').pack(pady=5, padx=10, anchor=tk.W)
+    ex_coop_entry = tk.Entry(set_play_window, width=50)
+    ex_coop_entry.pack(pady=5, padx=10)
+    tk.Button(set_play_window, text="Browse", command=lambda: browse_file(ex_coop_entry)).pack(pady=5, padx=10)
+
+    tk.Label(set_play_window, text="COOP DELUXE Executable:", bg=background_color, fg='white').pack(pady=5, padx=10, anchor=tk.W)
+    coop_deluxe_entry = tk.Entry(set_play_window, width=50)
+    coop_deluxe_entry.pack(pady=5, padx=10)
+    tk.Button(set_play_window, text="Browse", command=lambda: browse_file(coop_deluxe_entry)).pack(pady=5, padx=10)
+
+    tk.Button(set_play_window, text="Apply", command=apply_changes).pack(pady=20)
+
 
 def periodic_update():
     """Refresh the mods and archive lists every 5 seconds."""
@@ -174,31 +216,31 @@ def open_sm64_script():
     sm64_script = os.path.join(menu_folder, "SM64.py")
     os.startfile(sm64_script)
 
-def set_play_executable():
-    """Open a dialog to select an executable for 'Play'."""
-    play_executable_path = filedialog.askopenfilename(filetypes=[("Executable files", "*.exe")])
-    if play_executable_path:
-        with open('play_executable.json', 'w') as f:
-            json.dump({'executable_path': play_executable_path}, f)
-        messagebox.showinfo("Set Play", "Executable path has been set successfully.")
-
-def load_play_executable():
-    """Load the path of the play executable from a file."""
-    if os.path.exists('play_executable.json'):
-        with open('play_executable.json', 'r') as f:
+def load_play_executables():
+    """Charge les chemins des exécutables depuis le fichier play_executables.json."""
+    if os.path.exists('play_executables.json'):
+        with open('play_executables.json', 'r') as f:
             data = json.load(f)
-            return data.get('executable_path', None)
-    return None
+            return data.get('EX_COOP', None), data.get('COOP_DELUXE', None)
+    return None, None
 
-def play_executable():
-    """Run the previously set executable or prompt to set it if not already set."""
-    executable_path = load_play_executable()
+def play_executable(play_type):
+    """Exécute l'exécutable correspondant à play_type ('EX_COOP' ou 'COOP_DELUXE')."""
+    ex_coop_path, coop_deluxe_path = load_play_executables()
+    if play_type == "EX_COOP":
+        executable_path = ex_coop_path
+    elif play_type == "COOP_DELUXE":
+        executable_path = coop_deluxe_path
+    else:
+        executable_path = None
+
     if not executable_path or not os.path.exists(executable_path):
         response = messagebox.askyesno("Executable Not Set", "Executable not found or not set. Would you like to set it now?")
         if response:
-            set_play_executable()
+            open_set_play_interface()
     else:
         subprocess.Popen(executable_path)
+
 
 def setup_initial_mods():
     """Setup initial mods loading."""
@@ -295,7 +337,7 @@ root.config(menu=menu_bar)
 main_menu = Menu(menu_bar, tearoff=0)
 menu_bar.add_cascade(label="Main", menu=main_menu)
 main_menu.add_command(label="Add Mod", command=open_add_mod_script)
-main_menu.add_command(label="Set Play", command=set_play_executable)
+main_menu.add_command(label="Set Play", command=open_set_play_interface)
 main_menu.add_command(label="Open File Mod", command=lambda: open_folder(mods_path))
 
 # Index menu
@@ -322,9 +364,17 @@ menu_bar.add_cascade(label="About", menu=about_menu)
 about_menu.add_command(label="Update", command=open_update_script)
 about_menu.add_command(label="Info", command=open_info_script)
 
-# Play button at the bottom of the interface
-play_button = tk.Button(root, text="Play", command=play_executable, bg='#850F8D', fg='white', font=('Helvetica', 14, 'bold'))
-play_button.pack(pady=20)
+# Play buttons at the bottom of the interface
+play_ex_coop_button = tk.Button(root, text="Play EX COOP", command=lambda: play_executable("EX_COOP"), bg='#850F8D', fg='white', font=('Helvetica', 14, 'bold'))
+play_coop_deluxe_button = tk.Button(root, text="Play COOP DELUXE", command=lambda: play_executable("COOP_DELUXE"), bg='#850F8D', fg='white', font=('Helvetica', 14, 'bold'))
+
+play_buttons_frame = tk.Frame(root, bg=background_color)
+play_buttons_frame.pack(pady=20, side=tk.BOTTOM, fill=tk.X)
+
+# Pack the buttons to center them
+play_ex_coop_button.pack(side=tk.LEFT, padx=10, expand=True)
+play_coop_deluxe_button.pack(side=tk.LEFT, padx=10, expand=True)
+
 
 # Setup initial mods
 setup_initial_mods()
