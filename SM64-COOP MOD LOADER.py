@@ -10,7 +10,7 @@ if __name__ == "__main__":
     ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
 def open_set_play_interface():
-    """Ouvre une fenêtre pour configurer les exécutables pour les boutons de jeu."""
+    """Ouvre une fenêtre modale pour configurer les exécutables pour les boutons de jeu."""
     def apply_changes():
         """Enregistre les chemins des exécutables sélectionnés."""
         ex_coop_path = ex_coop_entry.get()
@@ -22,7 +22,7 @@ def open_set_play_interface():
             messagebox.showinfo("Configuration", "Les chemins des exécutables ont été mis à jour.")
             set_play_window.destroy()
         else:
-            messagebox.showerror("Error", "Please select the executable paths for both options.")
+            messagebox.showerror("Erreur", "Veuillez sélectionner les chemins des exécutables pour les deux options.")
 
     def browse_file(entry_widget):
         """Ouvre une boîte de dialogue pour sélectionner un fichier exécutable."""
@@ -31,11 +31,15 @@ def open_set_play_interface():
             entry_widget.delete(0, tk.END)
             entry_widget.insert(0, file_path)
 
-    # Créer la fenêtre de configuration
+    # Créer la fenêtre modale de configuration
     set_play_window = tk.Toplevel(root)
     set_play_window.title("Set Play")
     set_play_window.geometry("400x250")
     set_play_window.configure(bg=background_color)
+
+    # Rendre la fenêtre modale
+    set_play_window.grab_set()
+    set_play_window.transient(root)
 
     # Configuration des chemins d'exécutables
     tk.Label(set_play_window, text="EX COOP Executable:", bg=background_color, fg='white').pack(pady=5, padx=10, anchor=tk.W)
@@ -49,6 +53,7 @@ def open_set_play_interface():
     tk.Button(set_play_window, text="Browse", command=lambda: browse_file(coop_deluxe_entry)).pack(pady=5, padx=10)
 
     tk.Button(set_play_window, text="Apply", command=apply_changes).pack(pady=20)
+
 
 
 def periodic_update():
